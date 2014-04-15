@@ -1,0 +1,14 @@
+
+what is iconv?
+string iconv ( string $in_charset , string $out_charset , string $str )
+
+poc.php
+<?php
+  $str = '1.php'.chr(128).'.jpg';
+  echo @iconv("UTF-8", "gb2312", $str);
+?>
+Output:
+1.php
+
+why?
+Because chr(125) is not in gb2312 code, string was cut off by chr(128) or chr(129),even more...
