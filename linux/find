@@ -1,0 +1,92 @@
+寻找当前用户具有可写权限的目录
+find ./ -type d -writable
+
+寻找当前用户具有可写权限的文件
+find ./ -type f -writable
+
+按名称寻找文件
+find ./ -name "WebShell.php"
+
+按名称寻找文件+忽略大小写
+find ./ -iname "WebShell.php"
+
+设置搜寻目录的深度
+-mindepth 为起始深度的目录
+-maxdepth 为结束深度的目录
+两者可联合使用，下面在第二层子目录和第四层子目录之间查找文件
+find -mindepth 3 -maxdepth 5 -name "webshell*"
+
+在寻找到的文件上执行命令(如 md5sum)
+find -name "shell.php" -exec md5sum {} \;
+
+寻找含有特殊字符串的行
+find ./ -name "*.conf" -exec cat {} \; 2>>/dev/null | grep -nE 'password|passwd|pwd'
+
+相反匹配文件 -not
+find ./ -not -iname "WebShell.php"
+
+寻找指定权限的文件
+find ./ -perm 040
+
+寻找比指定权限更充足的文件
+find ./ -perm -040
+
+寻找比指定权限更严格的文件
+find ./ -perm +040
+
+寻找空文件
+find ./ -empty
+
+寻找指定大小的文件
+find ./ -size 100M
++100M即大于100M，-100M相反
+
+寻找1小时内修改的文件
+find ./ -mmin -60
+
+寻找1小时前修改的文件
+find ./ -mmin +60
+
+寻找1天内修改的文件
+find ./ -mtime -1
+
+寻找1天前修改的文件
+find ./ -mtime +1
+
+寻找1小时内被访问的文件
+find ./ -amin -60
+
+寻找1小时前被访问的文件
+find ./ -amin +60
+
+寻找1天内被访问的文件
+find ./ -atime -1
+
+寻找1天前被访问的文件
+find ./ -atime +1
+
+寻找1小时内状态被改变的文件
+find ./ -cmin -60
+
+寻找1小时前状态被改变的文件
+find ./ -cmin +60
+
+寻找1天内状态被改变的文件
+find ./ -ctime -1
+
+寻找1天前状态被改变的文件
+find ./ -ctime +1
+
+查找文件修改时间在某一文件修改后的文件
+find -newer index.php
+同样有-anewner,-cnewer的用法
+-anewner    查找文件修改时间在某一文件访问后的文件
+-cnewner    查找文件修改时间在某一文件状态修改后的文件
+
+
+
+特殊环境:
+1. 在命令执行漏洞的环境中(s2-017)，可以用 find ./ -type d -writable 快速查找到可写目录
+2. 在检查webshell的时候，可以通过文件修改时间判断是否存在插马的文件 find -newer index.php
+3. 在寻找密码配置文件的时候，可以 find ./ -name "*.conf" -exec cat {} \; 2>>/dev/null | grep -nE 'password|passwd|pwd'
+快速找到密码配置
